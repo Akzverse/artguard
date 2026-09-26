@@ -9,6 +9,8 @@ __pycache__/
 local_settings.py
 media/
 staticfiles/
+backend/staticfiles/
+backend/media/
 
 # Node
 node_modules/

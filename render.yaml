@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: artguard-api
+    runtime: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn wsgi:application"
+    plan: free
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true

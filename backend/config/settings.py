@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,12 +21,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-x=p)k=m5)jdrxvtjd7ms0&6#d*2(-!v(yi6dz@8j-*f)0(xtp('
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-x=p)k=m5)jdrxvtjd7ms0&6#d*2(-!v(yi6dz@8j-*f)0(xtp(')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1')
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'testserver', '*']
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -46,6 +47,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -85,6 +87,15 @@ DATABASES = {
     }
 }
 
+# If DATABASE_URL is set (e.g. Render PostgreSQL), use it
+DATABASE_URL = os.environ.get('DATABASE_URL')
+if DATABASE_URL:
+    try:
+        import dj_database_url
+        DATABASES['default'] = dj_database_url.config(default=DATABASE_URL, conn_max_age=600, ssl_require=False)
+    except Exception as e:
+        print(f"dj_database_url config notice: {e}")
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -120,7 +131,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -139,11 +151,8 @@ REST_FRAMEWORK = {
     ],
 }
 
-# CORS - Allow React frontend
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-]
+# CORS - Allow React frontend & Vercel deployment
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
 # JWT Tokens - 30 days lifetime for development & testing
